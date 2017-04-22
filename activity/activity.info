@@ -1,0 +1,8 @@
+[Activity]
+name = Jumble
+activity_version = 7 
+host_version = 1
+bundle_id = mulawa.Jumble
+icon = activity
+show_launcher = yes
+exec = sugar-activity activity.PeterActivity
