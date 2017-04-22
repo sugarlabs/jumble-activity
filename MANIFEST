@@ -1,8 +1,7 @@
-my_cursor_mask.xbm
 setup.py
 g.py
 buttons.py
-my_cursor.xbm
+load_save.py
 utils.py
 Jumble.py
 activity.py
@@ -12,6 +11,7 @@ sugargame/canvas.py
 sugargame/event.py
 activity/activity.info
 activity/activity.svg
+data/pointer.png
 data/new_down.png
 data/frame.png
 data/smiley.png

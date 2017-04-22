@@ -1,3 +1,6 @@
+# activity.py
+# my standard link between sugar and my activity
+
 from gettext import gettext as _
 
 import gtk
@@ -6,6 +9,7 @@ from sugar.activity import activity
 from sugar.graphics.toolbutton import ToolButton
 import gobject
 import sugargame.canvas
+import load_save
 import Jumble
 
 class PeterActivity(activity.Activity):
@@ -37,18 +41,13 @@ class PeterActivity(activity.Activity):
 
     def read_file(self, file_path):
         try:
-            f = open(file_path, "r")
+            f = open(file_path, 'r')
         except:
             return #****
-        try:
-            self.game.count=int(f.readline())
-        except:
-            pass
+        load_save.load(f)
         f.close()
 
     def write_file(self, file_path):
-        f = open(file_path, 'wb')
-        try:
-            f.write(str(self.game.count)+'\n')
-        finally:
-            f.close()
+        f = open(file_path, 'w')
+        load_save.save(f)
+        f.close()

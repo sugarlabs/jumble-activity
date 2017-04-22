@@ -100,7 +100,7 @@ class Objects:
             x,y=cxy; x-=self.frame.get_width()/2;x+=g.sy(.24)
             y+=self.frame.get_height()/2; y-=g.sy(.76)
             n=self.found; s=str(n)+' / '+str(self.find_n)
-            utils.text_blit1(g.screen,s,g.font1,(x,y),utils.BLACK)
+            utils.text_blit1(g.screen,s,g.font1,(x,y),utils.BLACK,False)
         if self.complete:
             cxy=(self.frame_cx,self.frame_cy)
             utils.centre_blit(g.screen,self.frame,cxy)
@@ -113,8 +113,9 @@ class Objects:
                 self.carry=False
                 return True
             else:
-                self.dx=self.frame_cx-g.mx
-                self.dy=self.frame_cy-g.my
+                mx,my=g.pos
+                self.dx=self.frame_cx-mx
+                self.dy=self.frame_cy-my
                 self.carry=True
                 return True
         for ind in range(self.find_n-1,-1,-1):
@@ -132,7 +133,8 @@ class Objects:
 
     def update(self):
         if self.carry:
-            self.frame_cx,self.frame_cy=(g.mx+self.dx,g.my+self.dy)
+            mx,my=g.pos
+            self.frame_cx,self.frame_cy=(mx+self.dx,my+self.dy)
             
     def next1(self):
         for i in range(len(lookFor)):

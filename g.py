@@ -15,12 +15,25 @@ ver='4.2'
 ver='4.3'
 # 4 changed images
 # space & square instead of arrow
+ver='21'
+ver='22'
+# flush_queue() doesn't use gtk on non-XO
+
+UP=(264,273)
+DOWN=(258,274)
+LEFT=(260,276)
+RIGHT=(262,275)
+CROSS=(259,120)
+CIRCLE=(265,111)
+SQUARE=(263,32)
+TICK=(257,13)
 
 def init(): # called by run()
     random.seed()
     global redraw
     global screen,w,h,font1,font2,clock
     global factor,offset,imgf,message,version_display
+    global pos,pointer
     redraw=True
     version_display=False
     screen = pygame.display.get_surface()
@@ -40,6 +53,9 @@ def init(): # called by run()
         t=int(40*imgf); font1=pygame.font.Font(None,t)
         t=int(80*imgf); font2=pygame.font.Font(None,t)
     message=''
+    pos=pygame.mouse.get_pos()
+    pointer=utils.load_image('pointer.png',True)
+    pygame.mouse.set_visible(False)
     
     # this activity only
     global count,margin,setup_on

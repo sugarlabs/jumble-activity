@@ -1,9 +1,9 @@
 # utils.py
-import g,pygame,sys,os,random,copy
+import g,pygame,sys,os,random,copy,load_save
 
 #constants
 RED,BLUE,GREEN,BLACK,WHITE=(255,0,0),(0,0,255),(0,255,0),(0,0,0),(255,255,255)
-CYAN,ORANGE,CREAM=(0,255,255),(255,165,0),(255,255,192)
+CYAN,ORANGE,CREAM,YELLOW=(0,255,255),(255,165,0),(255,255,192),(255,255,0)
 
 def exit():
     save()
@@ -17,7 +17,7 @@ def save():
     if dir==None: dir=''
     fname=os.path.join(dir,'data','jumble.dat')
     f=open(fname, 'w')
-    f.write(str(g.count)+'\n')
+    load_save.save(f)
     f.close
     
 def load():
@@ -30,14 +30,14 @@ def load():
     except:
         return None #****
     try:
-        g.count=int(f.readline())
+        load_save.load(f)
     except:
         pass
     f.close
     
 def version_display():
-    g.message=g.app+' V '+g.ver
-    g.message+='  '+str(g.screen.get_width())+' x '+str(g.screen.get_height())+' '+str(g.h)
+    g.message=g.app+' '+g.ver
+    g.message+='  '+str(g.screen.get_width())+' x '+str(g.screen.get_height())
     message(g.screen,g.font1,g.message)
     
 # loads an image (eg pic.png) from the data subdirectory
@@ -83,19 +83,25 @@ def centre_blit(screen,img,(cx,cy),angle=0): # rotation is clockwise
     rect=img1.get_rect()
     screen.blit(img1,(cx-rect.width/2,cy-rect.height/2))
 
-def text_blit(screen,s,font,(cx,cy),(r,g,b)):
-    text=font.render(s,True,(0,0,0))
-    rect=text.get_rect(); rect.centerx=cx+2; rect.centery=cy+2
-    screen.blit(text,rect)
+def text_blit(screen,s,font,(cx,cy),(r,g,b),shadow=True):
+    if shadow:
+        text=font.render(s,True,(0,0,0))
+        rect=text.get_rect(); rect.centerx=cx+2; rect.centery=cy+2
+        screen.blit(text,rect)
     text=font.render(s,True,(r,g,b))
     rect=text.get_rect(); rect.centerx=cx; rect.centery=cy
     screen.blit(text,rect)
     return rect
 
-def text_blit1(screen,s,font,(x,y),(r,g,b)):
+def text_blit1(screen,s,font,(x,y),(r,g,b),shadow=True):
+    if shadow:
+        text=font.render(s,True,(0,0,0))
+        rect=text.get_rect(); rect.x=x+2; rect.y=y+2
+        screen.blit(text,rect)
     text=font.render(s,True,(r,g,b))
     rect=text.get_rect(); rect.x=x; rect.y=y
     screen.blit(text,rect)
+    return rect
 
 # m is the message
 # d is the # of pixels in the border around the text
@@ -119,7 +125,7 @@ def message(screen,font,m,(cx,cy)=(0,0),d=20):
 def mouse_on_img(img,(x,y)): # x,y=top left
     w=img.get_width()
     h=img.get_height()
-    mx,my=pygame.mouse.get_pos()
+    mx,my=g.pos
     if mx<x: return False
     if mx>(x+w): return False
     if my<y: return False
@@ -135,8 +141,13 @@ def mouse_on_img1(img,(cx,cy)):
     xy=centre_to_top_left(img,(cx,cy))
     return mouse_on_img(img,xy)
             
+def mouse_on_img_rect(img,(cx,cy)):
+    w2=img.get_width()/2; h2=img.get_height()/2
+    x1=cx-w2; y1=cy-h2; x2=cx+w2; y2=cy+h2
+    return mouse_in(x1,y1,x2,y2)
+            
 def mouse_in(x1,y1,x2,y2):
-    mx,my=pygame.mouse.get_pos()
+    mx,my=g.pos
     if x1>mx: return False
     if x2<mx: return False
     if y1>my: return False
@@ -145,6 +156,15 @@ def mouse_in(x1,y1,x2,y2):
 
 def mouse_in_rect(rect): # x,y,w,h
     return mouse_in(rect[0],rect[1],rect[0]+rect[2],rect[1]+rect[3])
+
+def display_score():
+    if pygame.font:
+        text=g.font2.render(str(g.score),True,ORANGE,BLUE)
+        w=text.get_width(); h=text.get_height()
+        x=g.sx(5.7); y=g.sy(18.8); d=g.sy(.3)
+        pygame.draw.rect(g.screen,BLUE,(x-d-g.sy(.05),y-d,w+2*d,h+2*d))
+        g.screen.blit(text,(x,y))
+        centre_blit(g.screen,g.sparkle,(x-d+g.sy(.05),y+h/2-g.sy(.2)))
 
 def display_number(n,(cx,cy),font,colour=BLACK,bgd=None,outline_font=None):
     if pygame.font:
@@ -171,17 +191,9 @@ def centre_to_top_left(img,(cx,cy)):
     x=cx-img.get_width()/2; y=cy-img.get_height()/2
     return (x,y)
 
-def glow(img,glow,current,ms,delay): # returns current,ms
-    if ms<>None:
-        if ms==-1: # start glow
-            ms=pygame.time.get_ticks()
-            return glow,ms
-        else:
-            d=pygame.time.get_ticks()-ms
-            if d>delay: # reset image
-                ms=None; g.redraw=True
-                return img,ms
-    return current,ms
-        
+def sign(n):
+    if n<0: return -1
+    return 1
+
        
     
