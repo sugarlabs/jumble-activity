@@ -19,128 +19,164 @@
 #
 
 
-import g,pygame,utils,sys,buttons,jum,load_save
+import g
+import pygame
+import utils
+import sys
+import buttons
+import jum
+import load_save
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+
 class Jumble:
 
     def __init__(self):
-        self.journal=True # set to False if we come in via main()
-        self.canvas=None # set to the pygame canvas if we come in via activity.py
+        self.journal = True  # set to False if we come in via main()
+        self.canvas = None  # set to the pygame canvas if we come in via activity.py
 
     def display(self):
-        g.screen.fill((128,0,0))
+        g.screen.fill((128, 0, 0))
         buttons.draw()
         self.objects.draw()
 
-    def do_button(self,bu):
-        if bu=='new': self.setup()
-        if bu=='next': self.objects.next1()
+    def do_button(self, bu):
+        if bu == 'new':
+            self.setup()
+        if bu == 'next':
+            self.objects.next1()
 
-    def do_key(self,key):
+    def do_key(self, key):
         if key in g.SQUARE:
-            if buttons.active('new'): self.do_button('new'); return
+            if buttons.active('new'):
+                self.do_button('new')
+                return
         if key in g.CIRCLE:
-            if buttons.active('next'): self.do_button('next'); return
-        if key==pygame.K_v: g.version_display=not g.version_display; return
+            if buttons.active('next'):
+                self.do_button('next')
+                return
+        if key == pygame.K_v:
+            g.version_display = not g.version_display
+            return
 
     def setup(self):
-        g.setup_on=True; self.setup_ms=pygame.time.get_ticks()
-        
+        g.setup_on = True
+        self.setup_ms = pygame.time.get_ticks()
+
     def buttons_setup(self):
-        cx=g.sx(30.5)
-        buttons.Button('new',(cx,g.sy(3)))
-        buttons.Button('next',(cx,g.sy(5.5)))
+        cx = g.sx(30.5)
+        buttons.Button('new', (cx, g.sy(3)))
+        buttons.Button('next', (cx, g.sy(5.5)))
 
     def flush_queue(self):
-        flushing=True
+        flushing = True
         while flushing:
-            flushing=False
+            flushing = False
             if self.journal:
-                while Gtk.events_pending(): Gtk.main_iteration()
-            for event in pygame.event.get(): flushing=True
+                while Gtk.events_pending():
+                    Gtk.main_iteration()
+            for event in pygame.event.get():
+                flushing = True
 
     def run(self):
         for event in pygame.event.get():
-            if event.type==pygame.QUIT:
+            if event.type == pygame.QUIT:
                 return
             elif event.type == pygame.VIDEORESIZE:
                 pygame.display.set_mode(event.size, pygame.RESIZABLE)
                 break
         g.init()
-        if not self.journal: utils.load()
+        if not self.journal:
+            utils.load()
         load_save.retrieve()
         self.buttons_setup()
-        self.objects=jum.Objects()
+        self.objects = jum.Objects()
         self.objects.setup()
         self.setup()
-        if self.canvas<>None: self.canvas.grab_focus()
-        ctrl=False
-        pygame.key.set_repeat(600,120); key_ms=pygame.time.get_ticks()
-        going=True
+        if self.canvas is not None:
+            self.canvas.grab_focus()
+        ctrl = False
+        pygame.key.set_repeat(600, 120)
+        key_ms = pygame.time.get_ticks()
+        going = True
         while going:
             if self.journal:
                 # Pump GTK messages.
-                while Gtk.events_pending(): Gtk.main_iteration()
+                while Gtk.events_pending():
+                    Gtk.main_iteration()
 
             # Pump PyGame messages.
             for event in pygame.event.get():
-                if event.type==pygame.QUIT:
-                    if not self.journal: utils.save()
-                    going=False
+                if event.type == pygame.QUIT:
+                    if not self.journal:
+                        utils.save()
+                    going = False
                 elif event.type == pygame.MOUSEMOTION:
-                    g.pos=event.pos
-                    g.redraw=True; self.objects.update()
-                    if self.canvas<>None: self.canvas.grab_focus()
+                    g.pos = event.pos
+                    g.redraw = True
+                    self.objects.update()
+                    if self.canvas is not None:
+                        self.canvas.grab_focus()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    g.redraw=True
-                    if event.button==1:
+                    g.redraw = True
+                    if event.button == 1:
                         if self.objects.click():
                             if self.objects.complete:
                                 buttons.off('next')
                         else:
                             self.display()
-                            bu=buttons.check()
-                            if bu!='': self.do_button(bu)
-                    if event.button==3:
-                        if buttons.active('next'): self.do_button('next')
+                            bu = buttons.check()
+                            if bu != '':
+                                self.do_button(bu)
+                    if event.button == 3:
+                        if buttons.active('next'):
+                            self.do_button('next')
                     self.flush_queue()
                 elif event.type == pygame.KEYDOWN:
                     # throttle keyboard repeat
-                    if pygame.time.get_ticks()-key_ms>110:
-                        key_ms=pygame.time.get_ticks()
+                    if pygame.time.get_ticks() - key_ms > 110:
+                        key_ms = pygame.time.get_ticks()
                         if ctrl:
-                            if event.key==pygame.K_q:
-                                if not self.journal: utils.save()
-                                going=False; break
+                            if event.key == pygame.K_q:
+                                if not self.journal:
+                                    utils.save()
+                                going = False
+                                break
                             else:
-                                ctrl=False
-                        if event.key in (pygame.K_LCTRL,pygame.K_RCTRL):
-                            ctrl=True; break
-                        self.do_key(event.key); g.redraw=True
+                                ctrl = False
+                        if event.key in (pygame.K_LCTRL, pygame.K_RCTRL):
+                            ctrl = True
+                            break
+                        self.do_key(event.key)
+                        g.redraw = True
                         self.flush_queue()
                 elif event.type == pygame.KEYUP:
-                    ctrl=False
-            if not going: break
+                    ctrl = False
+            if not going:
+                break
             if g.setup_on:
-                self.objects.setup(); g.redraw=True
-                if (pygame.time.get_ticks()-self.setup_ms)>2000:
-                    g.setup_on=False; buttons.on('next')
+                self.objects.setup()
+                g.redraw = True
+                if (pygame.time.get_ticks() - self.setup_ms) > 2000:
+                    g.setup_on = False
+                    buttons.on('next')
             if g.redraw:
                 self.display()
-                if g.version_display: utils.version_display()
-                g.screen.blit(g.pointer,g.pos)
+                if g.version_display:
+                    utils.version_display()
+                g.screen.blit(g.pointer, g.pos)
                 pygame.display.flip()
-                g.redraw=False
+                g.redraw = False
             g.clock.tick(40)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     pygame.init()
-    pygame.display.set_mode((1024,768),pygame.FULLSCREEN)
-    game=Jumble()
-    game.journal=False
+    pygame.display.set_mode((1024, 768), pygame.FULLSCREEN)
+    game = Jumble()
+    game.journal = False
     game.run()
     pygame.display.quit()
     pygame.quit()
