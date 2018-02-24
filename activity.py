@@ -1,21 +1,18 @@
 # activity.py
 # my standard link between sugar and my activity
 
-from gettext import gettext as _
-
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
-from gi.repository import GObject
 import pygame
 from sugar3.activity import activity
 from sugar3.graphics.toolbarbox import ToolbarBox
 from sugar3.activity.widgets import ActivityToolbarButton
 from sugar3.activity.widgets import StopButton
-from sugar3.graphics.toolbarbox import ToolbarButton
 import sugargame.canvas
 import load_save
 import Jumble
+
 
 class PeterActivity(activity.Activity):
     def __init__(self, handle):
@@ -41,15 +38,12 @@ class PeterActivity(activity.Activity):
         stop_button.show()
         self.show_all()
 
-
         # Create the game instance.
         self.game = Jumble.Jumble()
 
         # Build the Pygame canvas.
-        self.game.canvas = self._pygamecanvas = \
-            sugargame.canvas.PygameCanvas(self,
-                main=self.game.run,
-                modules=[pygame.display, pygame.font])
+        self.game.canvas = self._pygamecanvas = sugargame.canvas.PygameCanvas(
+            self, main=self.game.run, modules=[pygame.display, pygame.font])
         # Note that set_canvas implicitly calls
         # read_file when resuming from the Journal.
         self.set_canvas(self._pygamecanvas)
@@ -57,8 +51,8 @@ class PeterActivity(activity.Activity):
     def read_file(self, file_path):
         try:
             f = open(file_path, 'r')
-        except:
-            return #****
+        except BaseException:
+            return  # ****
         load_save.load(f)
         f.close()
 
