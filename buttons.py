@@ -7,9 +7,9 @@ import pygame
 class Button:
     _instances = []
 
-    def __init__(self, name, xxx_todo_changeme, centre=True):
+    def __init__(self, name, coord, centre=True):
         # eg ('plus',(30,40))
-        (x1, y1) = xxx_todo_changeme
+        (x1, y1) = coord
         self._instances.append(self)
         up = utils.load_image(name + "_up.png", True)
         down = utils.load_image(name + "_down.png", True)
