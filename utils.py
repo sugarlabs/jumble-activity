@@ -4,7 +4,6 @@ import pygame
 import sys
 import os
 import random
-import copy
 import load_save
 
 # constants
@@ -107,7 +106,8 @@ def shuffle(lst):
     return lt
 
 
-def centre_blit(screen, img, xxx_todo_changeme, angle=0):  # rotation is clockwise
+def centre_blit(screen, img, xxx_todo_changeme, angle=0):
+    # rotation is clockwise
     (cx, cy) = xxx_todo_changeme
     img1 = img
     if angle != 0:

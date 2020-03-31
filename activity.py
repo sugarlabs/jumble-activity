@@ -4,11 +4,11 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
-import pygame
 from sugar3.activity import activity
 from sugar3.graphics.toolbarbox import ToolbarBox
 from sugar3.activity.widgets import ActivityToolbarButton
 from sugar3.activity.widgets import StopButton
+import pygame
 import sugargame.canvas
 import load_save
 import Jumble
