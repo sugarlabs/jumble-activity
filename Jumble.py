@@ -34,8 +34,10 @@ from gi.repository import Gtk
 class Jumble:
 
     def __init__(self):
-        self.journal = True  # set to False if we come in via main()
-        self.canvas = None  # set to the pygame canvas if we come in via activity.py
+        # set to False if we come in via main()
+        self.journal = True
+        # set to the pygame canvas if we come in via activity.py
+        self.canvas = None
 
     def display(self):
         g.screen.fill((128, 0, 0))
