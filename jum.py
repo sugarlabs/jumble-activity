@@ -23,7 +23,7 @@ class Objects:
         self.nc = 10
         self.total = self.nr * self.nc
         self.find_n = 20
-        self.find_ind = range(self.find_n)
+        self.find_ind = list(range(self.find_n))
         for i in range(self.find_n):
             lookFor.append(LookFor())
         self.imgs = []

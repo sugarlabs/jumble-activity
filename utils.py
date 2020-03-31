@@ -70,7 +70,7 @@ def load_image(file1, alpha=False, subdir=''):  # eg subdir='glow'
     try:
         img = pygame.image.load(fname)
     except BaseException:
-        print "Peter says: Can't find " + fname
+        print("Peter says: Can't find " + fname)
         exit()
     if alpha:
         img = img.convert_alpha()
