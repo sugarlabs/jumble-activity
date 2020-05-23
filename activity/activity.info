@@ -1,7 +1,6 @@
 [Activity]
 name = Jumble
-activity_version = 22
-host_version = 1
+activity_version = 23
 bundle_id = mulawa.Jumble
 icon = activity
 show_launcher = yes
