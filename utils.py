@@ -95,17 +95,6 @@ def copy_list(l):
     return new_list
 
 
-def shuffle(lst):
-    l1 = lst
-    lt = []
-    for i in range(len(lst)):
-        ln = len(l1)
-        r = random.randint(0, ln - 1)
-        lt.append(lst[r])
-        l1.remove(lst[r])
-    return lt
-
-
 def centre_blit(screen, img, coordinates, angle=0):
     # rotation is clockwise
     (cx, cy) = coordinates

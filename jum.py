@@ -30,48 +30,26 @@ class Objects:
         self.smiley = utils.load_image('smiley.png', True)
 
     def setup(self):
-        self.obj_grid = []
-        for i in range(10000):
-            r = random.randint(1, self.n)
-            if r not in self.obj_grid:
-                self.obj_grid.append(r)
-            if len(self.obj_grid) == self.total:
-                break
-        self.obj_bgd = []
-        for i in range(1, self.n + 1):
-            if i not in self.obj_grid:
-                self.obj_bgd.append(i)
+        self.obj_grid = list(range(1, self.n + 1))
+        random.shuffle(self.obj_grid)
+        self.obj_bgd = self.obj_grid[self.total:]
+        self.obj_grid = self.obj_grid[:self.total]
         self.glow_img = None
-        indl = 0
-        indr = self.nc - 1
-        maxl = 0
-        maxr = 0
-        for r in range(self.nr):
-            img = self.imgs[self.obj_grid[indl] - 1]
-            w = img.get_width()
-            if w > maxl:
-                maxl = w
-            img = self.imgs[self.obj_grid[indr] - 1]
-            w = img.get_width()
-            if w > maxr:
-                maxr = w
+
+        indl, indt = 0, 0
+        indr, indb = self.nc - 1, (self.nr - 1) * self.nc
+        # Left, right, top bottom
+        maxl, maxr, maxt, maxb = 0, 0, 0, 0
+        for _ in range(self.nr):
+            maxl = max(self.imgs[self.obj_grid[indl] - 1].get_width(), maxl)
+            maxr = max(self.imgs[self.obj_grid[indr] - 1].get_width(), maxr)
+            maxt = max(self.imgs[self.obj_grid[indt] - 1].get_height(), maxt)
+            maxb = max(self.imgs[self.obj_grid[indb] - 1].get_height(), maxb)
             indl += self.nc
             indr += self.nc
-        indt = 0
-        indb = (self.nr - 1) * self.nc
-        maxt = 0
-        maxb = 0
-        for r in range(self.nr):
-            img = self.imgs[self.obj_grid[indt] - 1]
-            h = img.get_height()
-            if h > maxt:
-                maxt = h
-            img = self.imgs[self.obj_grid[indb] - 1]
-            h = img.get_height()
-            if h > maxb:
-                maxb = h
             indt += 1
             indb += 1
+
         self.x1 = maxl / 2
         self.x2 = g.w - g.margin - maxr / 2
         self.dx = (self.x2 - self.x1) / (self.nc - 1)
