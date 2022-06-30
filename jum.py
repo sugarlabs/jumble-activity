@@ -4,17 +4,15 @@ import utils
 import g
 import pygame
 
-lookFor = []
 
 
-class LookFor:
-    def __init__(self):
-        self.img = None
-        self.cx = 0
-        self.cy = 0
+class GridImage:
+    def __init__(self, img, cx, cy):
+        self.img = img
+        self.cx = cx
+        self.cy = cy
         self.found = False
-        self.xy = (0, 0)  # top left
-
+        self.xy = utils.centre_to_top_left(img, (cx, cy))
 
 class Objects:
     def __init__(self):
@@ -23,9 +21,6 @@ class Objects:
         self.nc = 10
         self.total = self.nr * self.nc
         self.find_n = 20
-        self.find_ind = list(range(self.find_n))
-        for i in range(self.find_n):
-            lookFor.append(LookFor())
         self.imgs = []
         for i in range(1, self.n + 1):
             img = utils.load_image(str(i) + '.png', True, 'objects')
@@ -65,55 +60,65 @@ class Objects:
         self.x2 = int(self.x2)
         self.y1 = int(self.y1)
         self.y2 = int(self.y2)
-        self.to_find = random.sample(self.obj_grid, self.find_n)
         self.current_ind = 0
+        self.frame_cx = g.sx(3.1)
+        self.frame_cy = g.sy(20.1)
         self.set_bgd_lookFor()
-        random.shuffle(self.find_ind)
         self.found = 0
         self.complete = False
-        self.frame_cx = g.sx(14.65)
-        self.frame_cy = g.sy(11)
         self.dx, self.dy = 0, 0
         self.carry = False
+
+    def overlaps_frame(self, img, x, y):
+        fx, fy = utils.centre_to_top_left(self.frame, (self.frame_cx, self.frame_cy))
+        rect = pygame.Rect(x, y, *img.get_size())
+        return rect.colliderect(
+            pygame.Rect(fx, fy, *self.frame.get_size())
+        )
+
+    def get_random_empty_pos(self, img):
+        while True:
+            x = random.randint(self.x1, self.x2)
+            y = random.randint(self.y1, self.y2)
+            x, y = utils.centre_to_top_left(img, (x, y))
+            if not self.overlaps_frame(img, x, y):
+                return x, y
 
     def set_bgd_lookFor(self):
         self.bgd.fill((128, 0, 0))
         for n in self.obj_bgd:
-            x = random.randint(self.x1, self.x2)
-            y = random.randint(self.y1, self.y2)
-            utils.centre_blit(self.bgd, self.imgs[n - 1], (x, y))
-        y = self.y1
+            self.bgd.blit(self.imgs[n - 1], self.get_random_empty_pos(self.imgs[n - 1]))
+        cy = self.y1
         k = 0
-        ind1 = 0
+        grid = []
         for r in range(self.nr):
-            x = self.x1
+            cx = self.x1
             for c in range(self.nc):
                 n = self.obj_grid[k]
                 ind = n - 1
                 img = self.imgs[ind]
-                if n in self.to_find:
-                    lf = lookFor[ind1]
-                    lf.img = img
-                    lf.cx = x
-                    lf.cy = y
-                    lf.found = False
-                    lf.xy = utils.centre_to_top_left(img, (x, y))
-                    ind1 += 1
+                if self.overlaps_frame(img, *utils.centre_to_top_left(img, (cx, cy))):
+                    self.bgd.blit(img, self.get_random_empty_pos(img))
                 else:
-                    utils.centre_blit(self.bgd, img, (x, y))
-                x += self.dx
+                    grid.append(GridImage(img, cx, cy))
+                cx += self.dx
                 k += 1
-            y += self.dy
+            cy += self.dy
+        self.lookFor = random.sample(grid, self.find_n)
+        for img in grid:
+            if img not in self.lookFor:
+                utils.centre_blit(self.bgd, img.img, (img.cx, img.cy))
+
 
     def draw(self):
         g.screen.blit(self.bgd, (g.sx(0), 0))
         cxy = (g.sx(30.5), g.sy(20))
         utils.display_number(g.count, cxy, g.font2, utils.CREAM)
-        for lf in lookFor:
-            if not lf.found:
-                utils.centre_blit(g.screen, lf.img, (lf.cx, lf.cy))
+        for img in self.lookFor:
+            if not img.found:
+                utils.centre_blit(g.screen, img.img, (img.cx, img.cy))
         if not self.complete and not g.setup_on:
-            img = lookFor[self.find_ind[self.current_ind]].img
+            img = self.lookFor[self.current_ind].img
             cxy = (self.frame_cx, self.frame_cy)
             utils.centre_blit(g.screen, self.frame, cxy)
             utils.centre_blit(g.screen, img, cxy)
@@ -131,22 +136,11 @@ class Objects:
             utils.centre_blit(g.screen, self.smiley, cxy)
 
     def click(self):
-        cxy = (self.frame_cx, self.frame_cy)
-        if utils.mouse_on_img1(self.frame, cxy):
-            if self.carry:
-                self.carry = False
-                return True
-            else:
-                mx, my = g.pos
-                self.dx = self.frame_cx - mx
-                self.dy = self.frame_cy - my
-                self.carry = True
-                return True
         for ind in range(self.find_n - 1, -1, -1):
-            lf = lookFor[ind]
+            lf = self.lookFor[ind]
             if not lf.found:
                 if utils.mouse_on_img(lf.img, lf.xy):
-                    if ind == self.find_ind[self.current_ind]:
+                    if ind == self.current_ind:
                         lf.found = True
                         self.found += 1
                         if not self.next1():
@@ -163,10 +157,10 @@ class Objects:
             self.frame_cx, self.frame_cy = (mx + self.dx, my + self.dy)
 
     def next1(self):
-        for i in range(len(lookFor)):
+        for i in range(len(self.lookFor)):
             self.current_ind += 1
-            if self.current_ind == len(lookFor):
+            if self.current_ind == len(self.lookFor):
                 self.current_ind = 0
-            if not lookFor[self.find_ind[self.current_ind]].found:
+            if not self.lookFor[self.current_ind].found:
                 return True
         return False
