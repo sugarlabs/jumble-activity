@@ -7,12 +7,12 @@ import pygame
 
 
 class GridImage:
-    def __init__(self, img, cx, cy):
+    def __init__(self, img, from_xy, to_xy):
         self.img = img
-        self.cx = cx
-        self.cy = cy
+        self.from_x, self.from_y = from_xy
+        self.x, self.y = from_xy
+        self.to_x, self.to_y = to_xy
         self.found = False
-        self.xy = utils.centre_to_top_left(img, (cx, cy))
 
 class Objects:
     def __init__(self):
@@ -22,6 +22,14 @@ class Objects:
         self.total = self.nr * self.nc
         self.find_n = 20
         self.imgs = []
+        def easing_func(x):
+            if x < 0.5:
+                return 16 * x**5
+            else:
+                return 1 - pow(-2 * x + 2, 5) / 2
+        self.easing = easing_func
+
+        
         for i in range(1, self.n + 1):
             img = utils.load_image(str(i) + '.png', True, 'objects')
             self.imgs.append(img)
@@ -34,7 +42,7 @@ class Objects:
         random.shuffle(self.obj_grid)
         self.obj_bgd = self.obj_grid[self.total:]
         self.obj_grid = self.obj_grid[:self.total]
-        self.glow_img = None
+        self.grid_imgs = []
 
         indl, indt = 0, 0
         indr, indb = self.nc - 1, (self.nr - 1) * self.nc
@@ -69,9 +77,9 @@ class Objects:
         self.dx, self.dy = 0, 0
         self.carry = False
 
-    def overlaps_frame(self, img, x, y):
+    def overlaps_frame(self, img, top_left):
         fx, fy = utils.centre_to_top_left(self.frame, (self.frame_cx, self.frame_cy))
-        rect = pygame.Rect(x, y, *img.get_size())
+        rect = pygame.Rect(*top_left, *img.get_size())
         return rect.colliderect(
             pygame.Rect(fx, fy, *self.frame.get_size())
         )
@@ -81,34 +89,47 @@ class Objects:
             x = random.randint(self.x1, self.x2)
             y = random.randint(self.y1, self.y2)
             x, y = utils.centre_to_top_left(img, (x, y))
-            if not self.overlaps_frame(img, x, y):
+            if not self.overlaps_frame(img, (x, y)):
                 return x, y
 
     def set_bgd_lookFor(self):
         self.bgd.fill((128, 0, 0))
-        for n in self.obj_bgd:
-            self.bgd.blit(self.imgs[n - 1], self.get_random_empty_pos(self.imgs[n - 1]))
         cy = self.y1
         k = 0
-        grid = []
         for r in range(self.nr):
             cx = self.x1
             for c in range(self.nc):
                 n = self.obj_grid[k]
-                ind = n - 1
-                img = self.imgs[ind]
-                if self.overlaps_frame(img, *utils.centre_to_top_left(img, (cx, cy))):
-                    self.bgd.blit(img, self.get_random_empty_pos(img))
+                img = self.imgs[n - 1]
+                final_top_left = utils.centre_to_top_left(img, (cx, cy))
+                init_top_left = (0, g.h - img.get_height())
+                if self.overlaps_frame(img, final_top_left):
+                    self.obj_bgd.append(n)
                 else:
-                    grid.append(GridImage(img, cx, cy))
+                    self.grid_imgs.append(GridImage(img, init_top_left, final_top_left))
                 cx += self.dx
                 k += 1
             cy += self.dy
-        self.lookFor = random.sample(grid, self.find_n)
-        for img in grid:
-            if img not in self.lookFor:
-                utils.centre_blit(self.bgd, img.img, (img.cx, img.cy))
 
+        self.obj_bgd = [
+            GridImage(
+                self.imgs[n - 1],
+                (0, g.h - img.get_height()),
+                self.get_random_empty_pos(self.imgs[n - 1])
+            ) for n in self.obj_bgd
+        ]
+
+        self.lookFor = random.sample(self.grid_imgs, self.find_n)
+        self.play_anim(0)
+
+    def play_anim(self, alpha):
+        self.bgd.fill((128, 0, 0))
+        for img_list in (self.grid_imgs, self.obj_bgd):
+            for img in img_list:
+                img.x = img.from_x + (img.to_x - img.from_x) * self.easing(alpha)
+                img.y = img.from_y + (img.to_y - img.from_y) * self.easing(alpha)
+                if img not in self.lookFor:
+                    self.bgd.blit(img.img, (img.x, img.y))
 
     def draw(self):
         g.screen.blit(self.bgd, (g.sx(0), 0))
@@ -116,20 +137,20 @@ class Objects:
         utils.display_number(g.count, cxy, g.font2, utils.CREAM)
         for img in self.lookFor:
             if not img.found:
-                utils.centre_blit(g.screen, img.img, (img.cx, img.cy))
-        if not self.complete and not g.setup_on:
-            img = self.lookFor[self.current_ind].img
-            cxy = (self.frame_cx, self.frame_cy)
-            utils.centre_blit(g.screen, self.frame, cxy)
-            utils.centre_blit(g.screen, img, cxy)
-            x, y = cxy
-            x -= self.frame.get_width() / 2
-            x += g.sy(.24)
-            y += self.frame.get_height() / 2
-            y -= g.sy(.76)
-            n = self.found
-            s = str(n) + ' / ' + str(self.find_n)
-            utils.text_blit1(g.screen, s, g.font1, (x, y), utils.BLACK, False)
+                g.screen.blit(img.img, (img.x, img.y))
+
+        img = self.lookFor[self.current_ind].img
+        cxy = (self.frame_cx, self.frame_cy)
+        utils.centre_blit(g.screen, self.frame, cxy)
+        utils.centre_blit(g.screen, img, cxy)
+        x, y = cxy
+        x -= self.frame.get_width() / 2
+        x += g.sy(.24)
+        y += self.frame.get_height() / 2
+        y -= g.sy(.76)
+        s = str(self.found) + ' / ' + str(self.find_n)
+        utils.text_blit1(g.screen, s, g.font1, (x, y), utils.BLACK, False)
+        
         if self.complete:
             cxy = (self.frame_cx, self.frame_cy)
             utils.centre_blit(g.screen, self.frame, cxy)
@@ -139,7 +160,7 @@ class Objects:
         for ind in range(self.find_n - 1, -1, -1):
             lf = self.lookFor[ind]
             if not lf.found:
-                if utils.mouse_on_img(lf.img, lf.xy):
+                if utils.mouse_on_img(lf.img, (lf.x, lf.y)):
                     if ind == self.current_ind:
                         lf.found = True
                         self.found += 1

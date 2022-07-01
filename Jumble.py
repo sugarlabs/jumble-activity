@@ -38,6 +38,8 @@ class Jumble:
         self.journal = True
         # set to the pygame canvas if we come in via activity.py
         self.canvas = None
+        self.duration = 800
+        self.setup_objects = False
 
     def display(self):
         g.screen.fill((128, 0, 0))
@@ -46,7 +48,8 @@ class Jumble:
 
     def do_button(self, bu):
         if bu == 'new':
-            self.setup()
+            self.setup_ms = pygame.time.get_ticks()
+            g.setup_on = True
         if bu == 'next':
             self.objects.next1()
 
@@ -62,10 +65,6 @@ class Jumble:
         if key == pygame.K_v:
             g.version_display = not g.version_display
             return
-
-    def setup(self):
-        g.setup_on = True
-        self.setup_ms = pygame.time.get_ticks()
 
     def buttons_setup(self):
         cx = g.sx(30.5)
@@ -95,8 +94,9 @@ class Jumble:
         load_save.retrieve()
         self.buttons_setup()
         self.objects = jum.Objects()
+        self.setup_ms = pygame.time.get_ticks() - self.duration
         self.objects.setup()
-        self.setup()
+        g.setup_on = True
         if self.canvas is not None:
             self.canvas.grab_focus()
         ctrl = False
@@ -159,10 +159,16 @@ class Jumble:
             if not going:
                 break
             if g.setup_on:
-                self.objects.setup()
                 g.redraw = True
-                if (pygame.time.get_ticks() - self.setup_ms) > 2000:
+                _time = pygame.time.get_ticks() - self.setup_ms
+                self.objects.play_anim(abs(1 - _time/self.duration))
+                if _time > self.duration and not self.setup_objects:
+                    self.objects.setup()
+                    self.setup_objects = True
+                if _time > 2 * self.duration:
+                    self.objects.play_anim(1)
                     g.setup_on = False
+                    self.setup_objects = False
                     buttons.on('next')
             if g.redraw:
                 self.display()
