@@ -1,3 +1,9 @@
+24
+
+* Replace flashing anim with smooth sliding anim. (Sparsh Goenka)
+* Keep question frame static at corner. (Sparsh Goenka)
+* Make code more efficient and compact. (Sparsh Goenka)
+
 23
 
 * flake8 fixes (Jui Pradhan)
