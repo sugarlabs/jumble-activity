@@ -3,7 +3,7 @@ Jumble Activity
 
 Jumble is a picture matching activity, where a child learns to identify the object in a picture card and picks it from the clutter of objects behind.
 
-![Screenshot](screenshots/1.png)
+![Screenshot](screenshots/1.jpg)
 
 How to use?
 ===============
