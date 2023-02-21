@@ -174,7 +174,6 @@ class Jumble:
                 self.display()
                 if g.version_display:
                     utils.version_display()
-                g.screen.blit(g.pointer, g.pos)
                 pygame.display.flip()
                 g.redraw = False
             g.clock.tick(40)
