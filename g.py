@@ -60,9 +60,6 @@ def init():  # called by run()
         t = int(80 * imgf)
         font2 = pygame.font.Font(None, t)
     message = ''
-    pos = pygame.mouse.get_pos()
-    pointer = utils.load_image('pointer.png', True)
-    pygame.mouse.set_visible(False)
 
     # this activity only
     global count, margin, setup_on
