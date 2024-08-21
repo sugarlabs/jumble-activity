@@ -102,8 +102,8 @@ class Jumble:
         ctrl = False
         pygame.key.set_repeat(600, 120)
         key_ms = pygame.time.get_ticks()
-        going = True
-        while going:
+        self.running = True
+        while self.running:
             if self.journal:
                 # Pump GTK messages.
                 while Gtk.events_pending():
@@ -114,7 +114,7 @@ class Jumble:
                 if event.type == pygame.QUIT:
                     if not self.journal:
                         utils.save()
-                    going = False
+                    self.running = False
                 elif event.type == pygame.MOUSEMOTION:
                     g.pos = event.pos
                     g.redraw = True
@@ -144,7 +144,7 @@ class Jumble:
                             if event.key == pygame.K_q:
                                 if not self.journal:
                                     utils.save()
-                                going = False
+                                self.running = False
                                 break
                             else:
                                 ctrl = False
@@ -156,7 +156,7 @@ class Jumble:
                         self.flush_queue()
                 elif event.type == pygame.KEYUP:
                     ctrl = False
-            if not going:
+            if not self.running:
                 break
             if g.setup_on:
                 g.redraw = True
